@@ -1,5 +1,5 @@
 # From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations
-This repository contains a pytorch implementation of ["From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations"](https://people.eecs.berkeley.edu/~evonne_ng/projects/audio2photoreal/)
+This repository contains a pytorch implementation of ["From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations"](https://evonneng.github.io/projects/audio2photoreal/index.html)
 
 :hatching_chick: **Try out our demo [here](https://colab.research.google.com/drive/1lnX3d-3T3LaO3nlN6R8s6pPvVNAk5mdK?usp=sharing)** or continue following the steps below to run code locally!
 And thanks everyone for the support via contributions/comments/issues!
