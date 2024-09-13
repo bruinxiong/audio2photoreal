@@ -153,31 +153,35 @@ class GradioModel:
         return np.concatenate(all_motions, axis=0)
 
 
-def generate_results(audio: np.ndarray, num_repetitions: int, top_p: float):
-    if audio is None:
-        raise gr.Error("Please record audio to start")
-    sr, y = audio
-    # set to mono and perform resampling
-    y = torch.Tensor(y)
-    if y.dim() == 2:
-        dim = 0 if y.shape[0] == 2 else 1
-        y = torch.mean(y, dim=dim)
-    y = torchaudio.functional.resample(torch.Tensor(y), orig_freq=sr, new_freq=48_000)
+def generate_results(gradio_model, num_repetitions: int, top_p: float):
+    # if audio is None:
+    #     raise gr.Error("Please record audio to start")
+    # sr, y = audio
+    # # set to mono and perform resampling
+    # y = torch.Tensor(y)
+    # if y.dim() == 2:
+    #     dim = 0 if y.shape[0] == 2 else 1
+    #     y = torch.mean(y, dim=dim)
+    # y = torchaudio.functional.resample(torch.Tensor(y), orig_freq=sr, new_freq=48_000)
     sr = 48_000
-    # make it so that it is 4 seconds long
-    if len(y) < (sr * 4):
-        raise gr.Error("Please record at least 4 second of audio")
-    if num_repetitions is None or num_repetitions <= 0 or num_repetitions > 10:
-        raise gr.Error(
-            f"Invalid number of samples: {num_repetitions}. Please specify a number between 1-10"
-        )
-    cutoff = int(len(y) / (sr * 4))
-    y = y[: cutoff * sr * 4]
-    curr_seq_length = int(len(y) / sr) * 30
+    # # make it so that it is 4 seconds long
+    # if len(y) < (sr * 4):
+    #     raise gr.Error("Please record at least 4 second of audio")
+    # if num_repetitions is None or num_repetitions <= 0 or num_repetitions > 10:
+    #     raise gr.Error(
+    #         f"Invalid number of samples: {num_repetitions}. Please specify a number between 1-10"
+    #     )
+    # cutoff = int(len(y) / (sr * 4))
+    # y = y[: cutoff * sr * 4]
+    # curr_seq_length = int(len(y) / sr) * 30
     # create model_kwargs
     model_kwargs = {"y": {}}
-    dual_audio = np.random.normal(0, 0.001, (1, len(y), 2))
-    dual_audio[:, :, 0] = y / max(y)
+    # dual_audio = np.random.normal(0, 0.001, (1, len(y), 2))
+    # dual_audio[:, :, 0] = y / max(y)
+    # TODO: load audio from file (2, T) -> (1, T, 2)
+    dual_audio = torchaudio.load('cca_full2.wav')[0]
+    curr_seq_length = int(dual_audio.shape[-1] / sr) * 30
+    dual_audio = dual_audio.T.unsqueeze(0)
     dual_audio = (dual_audio - gradio_model.stats["audio_mean"]) / gradio_model.stats[
         "audio_std_flat"
     ]
@@ -213,11 +217,11 @@ def generate_results(audio: np.ndarray, num_repetitions: int, top_p: float):
         dual_audio * gradio_model.stats["audio_std_flat"]
         + gradio_model.stats["audio_mean"]
     )
-    return face_results, pose_results, dual_audio[0].transpose(1, 0).astype(np.float32)
+    return face_results, pose_results, dual_audio[0].cpu().numpy().transpose(1, 0).astype(np.float32)
 
 
-def audio_to_avatar(audio: np.ndarray, num_repetitions: int, top_p: float):
-    face_results, pose_results, audio = generate_results(audio, num_repetitions, top_p)
+def audio_to_avatar(gradio_model, num_repetitions: int = 5, top_p: float = 0.97):
+    face_results, pose_results, audio = generate_results(gradio_model, num_repetitions, top_p)
     # returns: num_rep x T x 104
     B = len(face_results)
     results = []
@@ -235,42 +239,12 @@ def audio_to_avatar(audio: np.ndarray, num_repetitions: int, top_p: float):
     return results
 
 
-gradio_model = GradioModel(
-    face_args="./checkpoints/diffusion/c1_face/args.json",
-    pose_args="./checkpoints/diffusion/c1_pose/args.json",
-)
-demo = gr.Interface(
-    audio_to_avatar,  # function
-    [
-        gr.Audio(sources=["microphone"]),
-        gr.Number(
-            value=3,
-            label="Number of Samples (default = 3)",
-            precision=0,
-            minimum=1,
-            maximum=10,
-        ),
-        gr.Number(
-            value=0.97,
-            label="Sample Diversity (default = 0.97)",
-            precision=None,
-            minimum=0.01,
-            step=0.01,
-            maximum=1.00,
-        ),
-    ],  # input type
-    [gr.Video(format="mp4", visible=True)]
-    + [gr.Video(format="mp4", visible=False) for _ in range(9)],  # output type
-    title='"From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations" Demo',
-    description="You can generate a photorealistic avatar from your voice! <br/>\
-        1) Start by recording your audio.  <br/>\
-        2) Specify the number of samples to generate.  <br/>\
-        3) Specify how diverse you want the samples to be. This tunes the cumulative probability in nucleus sampling: 0.01 = low diversity, 1.0 = high diversity.  <br/>\
-        4) Then, sit back and wait for the rendering to happen! This may take a while (e.g. 30 minutes) <br/>\
-        5) After, you can view the videos and download the ones you like.  <br/>",
-    article="Relevant links: [Project Page](https://people.eecs.berkeley.edu/~evonne_ng/projects/audio2photoreal)",  # TODO: code and arxiv
-)
+def main():
+    gradio_model = GradioModel(
+        face_args="./checkpoints/diffusion/c1_face/args.json",
+        pose_args="./checkpoints/diffusion/c1_pose/args.json",
+    )
+    audio_to_avatar(gradio_model)
 
 if __name__ == "__main__":
-    fixseed(10)
-    demo.launch(share=True)
+    main()

@@ -5,18 +5,15 @@ This source code is licensed under the license found in the
 LICENSE file in the root directory of this source tree.
 """
 
-from typing import List, Dict
+from typing import Dict, List
+
 import torch as th
 import torch.nn as nn
-
-from pytorch3d.renderer import (
-    RasterizationSettings,
-    MeshRasterizer,
-)
-
-from pytorch3d.structures import Meshes
+from pytorch3d.renderer import MeshRasterizer, RasterizationSettings
 from pytorch3d.renderer.mesh.textures import TexturesUV
+from pytorch3d.structures import Meshes
 from pytorch3d.utils import cameras_from_opencv_projection
+
 
 class RenderLayer(nn.Module):
     

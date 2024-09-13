@@ -12,39 +12,24 @@ import numpy as np
 import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
-
-from torchvision.utils import make_grid
-from torchvision.transforms.functional import gaussian_blur
-
 import visualize.ca_body.nn.layers as la
-
-from visualize.ca_body.nn.blocks import (
-    ConvBlock,
-    ConvDownBlock,
-    UpConvBlockDeep,
-    tile2d,
-    weights_initializer,
-)
-from visualize.ca_body.nn.dof_cal import LearnableBlur
-
-from visualize.ca_body.utils.geom import (
-    GeometryModule,
-    compute_view_cos,
-    depth_discontuity_mask,
-    depth2normals,
-)
-
-from visualize.ca_body.nn.shadow import ShadowUNet, PoseToShadow
-from visualize.ca_body.nn.unet import UNetWB
+from torchvision.transforms.functional import gaussian_blur
+from torchvision.utils import make_grid
+from visualize.ca_body.nn.blocks import (ConvBlock, ConvDownBlock,
+                                         UpConvBlockDeep, tile2d,
+                                         weights_initializer)
 from visualize.ca_body.nn.color_cal import CalV5
-
+from visualize.ca_body.nn.dof_cal import LearnableBlur
+from visualize.ca_body.nn.face import FaceDecoderFrontal
+from visualize.ca_body.nn.shadow import PoseToShadow, ShadowUNet
+from visualize.ca_body.nn.unet import UNetWB
+from visualize.ca_body.utils.geom import (GeometryModule, compute_view_cos,
+                                          depth2normals,
+                                          depth_discontuity_mask)
 from visualize.ca_body.utils.image import linear2displayBatch
 from visualize.ca_body.utils.lbs import LBSModule
 from visualize.ca_body.utils.render import RenderLayer
 from visualize.ca_body.utils.seams import SeamSampler
-from visualize.ca_body.utils.render import RenderLayer
-
-from visualize.ca_body.nn.face import FaceDecoderFrontal
 
 logger = logging.getLogger(__name__)
 
@@ -349,13 +334,17 @@ class AutoEncoder(nn.Module):
             preds.update(**enc_preds)
 
         if not th.jit.is_scripting() and self.rendering_enabled:
-
+            import pdb; pdb.set_trace()
+            v_cpu= preds['geom'].cpu()
+            tex_cpu = tex_rec.cpu()
+            k_cpu = K.cpu()
+            r_cpu = Rt.cpu()
             # NOTE: this is a reduced version tested for forward only
             renders = self.renderer(
-                preds['geom'],
-                tex_rec,
-                K=K,
-                Rt=Rt,
+                v_cpu,
+                tex_cpu,
+                K=k_cpu,
+                Rt=r_cpu,
             )
 
             preds.update(rgb=renders['render'])

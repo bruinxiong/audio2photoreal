@@ -11,22 +11,22 @@ LICENSE file in the root directory of this source tree.
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import logging
 from typing import Optional
+
 import numpy as np
 import torch as th
-import torch.nn.functional as F
 import torch.nn as nn
-
+import torch.nn.functional as F
 from sklearn.neighbors import KDTree
 
-import logging
-
 logger = logging.getLogger(__name__)
+
+from typing import Optional, Tuple, Union
 
 # NOTE: we need pytorch3d primarily for UV rasterization things
 from pytorch3d.renderer.mesh.rasterize_meshes import rasterize_meshes
 from pytorch3d.structures import Meshes
-from typing import Union, Optional, Tuple
 
 
 def make_uv_face_index(
@@ -38,7 +38,8 @@ def make_uv_face_index(
 ):
     """Compute a UV-space face index map identifying which mesh face contains each
     texel. For texels with no assigned triangle, the index will be -1."""
-
+    
+    device = "cpu"
     if isinstance(uv_shape, int):
         uv_shape = (uv_shape, uv_shape)
 
@@ -47,7 +48,7 @@ def make_uv_face_index(
             dev = th.device(device)
         else:
             dev = device
-        assert dev.type == "cuda"
+        # assert dev.type == "cuda"
     else:
         dev = th.device("cuda")
 
