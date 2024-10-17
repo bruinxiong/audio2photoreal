@@ -1,7 +1,7 @@
 # From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations
-This repository contains a pytorch implementation of ["From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations"](https://people.eecs.berkeley.edu/~evonne_ng/projects/audio2photoreal/)
+This repository contains a pytorch implementation of ["From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations"](https://evonneng.github.io/projects/audio2photoreal/index.html)
 
-:hatching_chick: **Try out our demo [here](https://colab.research.google.com/drive/1lnX3d-3T3LaO3nlN6R8s6pPvVNAk5mdK?usp=sharing)** or continue following the steps below to run code locally!
+:hatching_chick: **Try out our demo [here](https://colab.research.google.com/drive/1A6EwKM3PeX7dcKV66zxQWuP-v_dKlX_0?usp=sharing)** or continue following the steps below to run code locally!
 And thanks everyone for the support via contributions/comments/issues!
 
 https://github.com/facebookresearch/audio2photoreal/assets/17986358/5cba4079-275e-48b6-aecc-f84f3108c810
@@ -15,10 +15,10 @@ This codebase provides:
 If you use the dataset or code, please cite our [Paper](https://arxiv.org/abs/2401.01885)
 
 ```
-@article{ng2024audio2photoreal,
+@inproceedings{ng2024audio2photoreal,
   title={From Audio to Photoreal Embodiment: Synthesizing Humans in Conversations},
   author={Ng, Evonne and Romero, Javier and Bagautdinov, Timur and Bai, Shaojie and Darrell, Trevor and Kanazawa, Angjoo and Richard, Alexander},
-  journal={arXiv preprint arXiv:2401.01885},
+  booktitle={IEEE Conference on Computer Vision and Pattern Recognition},
   year={2024}
 }
 ```
@@ -241,12 +241,12 @@ python -m sample.generate
     --num_samples <xsamples> 
     --num_repetitions <xreps> 
     --timestep_respacing ddim500 
-    --guidance_param 10.0
+    --guidance_param 2.0
 ```
 
 :point_down: Here, `<path/to/guide/model>` should point to the guide transformer. The full command would be:
 ```
-python -m sample.generate --model_path checkpoints/diffusion/c1_pose/model000340000.pt --resume_trans checkpoints/guide/c1_pose/checkpoints/iter-0100000.pt --num_samples 10 --num_repetitions 5 --timestep_respacing ddim500 --guidance_param 10.0
+python -m sample.generate --model_path checkpoints/diffusion/c1_pose/model000340000.pt --resume_trans checkpoints/guide/c1_pose/checkpoints/iter-0100000.pt --num_samples 10 --num_repetitions 5 --timestep_respacing ddim500 --guidance_param 2.0
 ```
 Similarly, the output will be saved to:
 `./checkpoints/diffusion/c1_pose/samples_c1_pose_000340000_seed10_guide_iter-0100000.pt/results.npy`
@@ -258,7 +258,7 @@ This will save videos in the same directory as where the body's `results.npy` is
 
 :point_down: An example of the full command with *the three new flags added is*:
 ```
-python -m sample.generate --model_path checkpoints/diffusion/c1_pose/model000340000.pt --resume_trans checkpoints/guide/c1_pose/checkpoints/iter-0100000.pt --num_samples 10 --num_repetitions 5 --timestep_respacing ddim500 --guidance_param 10.0 --face_codes ./checkpoints/diffusion/c1_face/samples_c1_face_000155000_seed10_/results.npy --pose_codes ./checkpoints/diffusion/c1_pose/samples_c1_pose_000340000_seed10_guide_iter-0100000.pt/results.npy --plot
+python -m sample.generate --model_path checkpoints/diffusion/c1_pose/model000340000.pt --resume_trans checkpoints/guide/c1_pose/checkpoints/iter-0100000.pt --num_samples 10 --num_repetitions 5 --timestep_respacing ddim500 --guidance_param 2.0 --face_codes ./checkpoints/diffusion/c1_face/samples_c1_face_000155000_seed10_/results.npy --pose_codes ./checkpoints/diffusion/c1_pose/samples_c1_pose_000340000_seed10_guide_iter-0100000.pt/results.npy --plot
 ```
 The remaining flags can be the same as before. For the actual rendering api, please see [Codec Avatar Body](https://github.com/facebookresearch/ca_body) for installation etc.
 *Important: in order to visualize the full photorealistic avatar, you will need to run the face codes first, then pass them into the body generation code.* It will not work if you try to call generate with `--plot` for the face codes.
